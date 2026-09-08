@@ -162,15 +162,22 @@ window.restartGame=()=>{
 async function setupHandTracking(){
  try{
   const vision=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm");
-  handLandmarker=await HandLandmarker.createFromOptions(vision,{
-   baseOptions:{
-    modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-    delegate:"GPU"
-   },
-   runningMode:"VIDEO",
-   numHands:1
-  });
-  cameraStatus.textContent="Hand Tracking พร้อม — ชู 1–4 นิ้ว";
+  const baseOptions={
+   modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+  };
+  try{
+   handLandmarker=await HandLandmarker.createFromOptions(vision,{
+    baseOptions:{...baseOptions,delegate:"GPU"},
+    runningMode:"VIDEO",numHands:1
+   });
+  }catch(gpuError){
+   console.warn("GPU unavailable, switching to CPU",gpuError);
+   handLandmarker=await HandLandmarker.createFromOptions(vision,{
+    baseOptions:{...baseOptions,delegate:"CPU"},
+    runningMode:"VIDEO",numHands:1
+   });
+  }
+  cameraStatus.textContent="Hand Tracking พร้อม — กำลังเปิดกล้อง...";
   startCamera();
  }catch(err){
   console.error(err);
@@ -179,11 +186,21 @@ async function setupHandTracking(){
 }
 async function startCamera(){
  try{
-  const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+   throw new Error("Camera API unavailable");
+  }
+  const stream=await navigator.mediaDevices.getUserMedia({
+   video:{width:{ideal:640},height:{ideal:480},facingMode:"user"},
+   audio:false
+  });
   video.srcObject=stream;
-  video.addEventListener("loadeddata",predict);
+  video.onloadeddata=()=>{
+   cameraStatus.textContent="กล้องพร้อม — ชู 1–4 นิ้วเพื่อเลือกคำตอบ";
+   requestAnimationFrame(predict);
+  };
  }catch(err){
-  cameraStatus.textContent="ไม่สามารถใช้กล้องได้ — ใช้เมาส์ตอบได้";
+  console.error("Camera error:",err);
+  cameraStatus.textContent="เปิดกล้องไม่ได้ — สามารถใช้เมาส์ตอบได้";
  }
 }
 function fingerCount(lm){
@@ -208,6 +225,11 @@ function predict(){
 }
 renderQuestion();
 setupHandTracking();
+setTimeout(()=>{
+ if(cameraStatus.textContent.includes("กำลังเตรียม") || cameraStatus.textContent.includes("กำลังเปิด")){
+  cameraStatus.textContent="กำลังโหลดนานเกินไป — รีเฟรชหน้าเว็บอีกครั้ง หรือใช้เมาส์ตอบได้";
+ }
+},15000);
 </script>
 </body>
 </html>
