@@ -8,13 +8,10 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,"Noto Sans Thai",sans-serif;background:linear-gradient(135deg,#ffd8ec,#e7d9ff,#d7edff);color:#493d55;min-height:100vh}
 .wrap{max-width:1050px;margin:auto;padding:20px}
-header,.card{background:rgba(255,255,255,.94);border-radius:26px;box-shadow:0 10px 28px rgba(80,50,100,.12)}
-header{text-align:center;padding:18px}
-.cat{font-size:54px}
-h1{margin:0;color:#7747b5;font-size:clamp(28px,5vw,42px)}
-.sub{margin-top:7px}
-.card{margin-top:16px;padding:20px}
-.top{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between}
+header,.card{background:rgba(255,255,255,.95);border-radius:26px;box-shadow:0 10px 28px rgba(80,50,100,.12)}
+header{text-align:center;padding:18px}.cat{font-size:54px}
+h1{margin:0;color:#7747b5;font-size:clamp(28px,5vw,42px)}.sub{margin-top:7px}
+.card{margin-top:16px;padding:20px}.top{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between}
 .badge{background:#f1e5fb;padding:9px 14px;border-radius:99px;font-weight:700}
 .progress{height:11px;background:#eadff1;border-radius:99px;margin:15px 0 20px;overflow:hidden}
 .bar{height:100%;width:0;background:linear-gradient(90deg,#ff8fc6,#9775e8);transition:.3s}
@@ -24,63 +21,52 @@ h1{margin:0;color:#7747b5;font-size:clamp(28px,5vw,42px)}
 .options{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 @media(max-width:520px){.options{grid-template-columns:1fr}}
 .option{border:2px solid #e6d8ee;background:white;border-radius:16px;padding:14px;text-align:left;font-size:17px;cursor:pointer}
-.option:hover{border-color:#a978d8;background:#faf6ff}
-.option.correct{border-color:#4cae71;background:#eaf9ef}
-.option.wrong{border-color:#e7788d;background:#fff0f3}
+.option:hover{border-color:#a978d8;background:#faf6ff}.option.correct{border-color:#4cae71;background:#eaf9ef}.option.wrong{border-color:#e7788d;background:#fff0f3}
 .num{display:inline-flex;width:31px;height:31px;border-radius:50%;align-items:center;justify-content:center;background:#efddff;font-weight:bold;margin-right:7px}
 .feedback{min-height:55px;background:#f7f0fb;border-radius:15px;margin-top:15px;padding:12px;line-height:1.5}
 .camera{background:#332d3a;border-radius:20px;padding:10px;color:white;text-align:center}
 video{width:100%;border-radius:14px;display:block;background:#17141a;transform:scaleX(-1);aspect-ratio:4/3;object-fit:cover}
-.status{font-size:14px;margin:9px 2px}
-.btnrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-button.primary,button.secondary{border:0;border-radius:13px;padding:11px 17px;font-weight:bold;cursor:pointer;font-size:15px}
-.primary{background:#8558bd;color:#fff}.secondary{background:#eee4f5;color:#574866}
-.hidden{display:none}
-.center{text-align:center}
-.final{font-size:52px;color:#7747b5;font-weight:800}
-.hint{font-size:13px;opacity:.8;margin-top:7px}
+.status{font-size:14px;margin:9px 2px;min-height:20px}
+button.primary{border:0;border-radius:13px;padding:11px 17px;font-weight:bold;cursor:pointer;font-size:15px;background:#8558bd;color:white}
+button.primary:disabled{opacity:.6;cursor:default}.hidden{display:none}.center{text-align:center}
+.final{font-size:52px;color:#7747b5;font-weight:800}.hint{font-size:13px;opacity:.8;margin-top:7px}
 </style>
+
+<!-- ใช้ MediaPipe Hands แบบเว็บที่เสถียรและไม่ต้องใช้ ES module -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <div class="wrap">
-<header>
- <div class="cat">🐱</div>
- <h1>Python Variable Game</h1>
- <div class="sub">เกมฝึกเรื่องตัวแปร การตั้งชื่อ และคำสงวน สำหรับนักเรียน ม.2</div>
-</header>
+<header><div class="cat">🐱</div><h1>Python Variable Game</h1><div class="sub">เกมฝึกเรื่องตัวแปร การตั้งชื่อ และคำสงวน สำหรับนักเรียน ม.2</div></header>
 
 <section class="card" id="game">
- <div class="top">
-  <div class="badge" id="level">ด่าน 1: ตัวแปร</div>
-  <div class="badge">ข้อ <span id="qnum">1</span> / 15</div>
-  <div class="badge">คะแนน <span id="score">0</span></div>
- </div>
- <div class="progress"><div class="bar" id="bar"></div></div>
+<div class="top">
+<div class="badge" id="level">ด่าน 1: ตัวแปร</div>
+<div class="badge">ข้อ <span id="qnum">1</span> / 15</div>
+<div class="badge">คะแนน <span id="score">0</span></div>
+</div>
+<div class="progress"><div class="bar" id="bar"></div></div>
 
- <div class="grid">
-  <div>
-   <div class="question" id="question"></div>
-   <div class="options" id="options"></div>
-   <div class="feedback" id="feedback">ตอบด้วยเมาส์ หรือชูนิ้ว 1–4 นิ้ว</div>
-  </div>
-
-  <div class="camera">
-   <video id="webcam" autoplay playsinline muted></video>
-   <div class="status" id="status">ยังไม่ได้เปิดกล้อง</div>
-   <div class="btnrow">
-    <button class="primary" id="cameraBtn">เปิดกล้อง + Hand Tracking</button>
-   </div>
-   <div class="hint">ถ้ากล้องไม่พร้อม สามารถคลิกคำตอบได้ตามปกติ</div>
-  </div>
- </div>
+<div class="grid">
+<div>
+<div class="question" id="question"></div>
+<div class="options" id="options"></div>
+<div class="feedback" id="feedback">ตอบด้วยเมาส์ หรือชูนิ้ว 1–4 นิ้ว</div>
+</div>
+<div class="camera">
+<video id="webcam" autoplay playsinline muted></video>
+<div class="status" id="status">กดปุ่มเพื่อเปิดกล้อง</div>
+<button class="primary" id="cameraBtn">เปิดกล้อง + Hand Tracking</button>
+<div class="hint">หากกล้องไม่พร้อม สามารถคลิกคำตอบได้ตามปกติ</div>
+</div>
+</div>
 </section>
 
 <section class="card center hidden" id="result">
- <div class="cat">🐱</div>
- <h2>จบเกมแล้ว</h2>
- <div class="final"><span id="finalScore">0</span> คะแนน</div>
- <p id="summary"></p>
- <button class="primary" id="restart">เล่นอีกครั้ง</button>
+<div class="cat">🐱</div><h2>จบเกมแล้ว</h2>
+<div class="final"><span id="finalScore">0</span> คะแนน</div>
+<p id="summary"></p><button class="primary" id="restart">เล่นอีกครั้ง</button>
 </section>
 </div>
 
@@ -103,8 +89,9 @@ const questions=[
 {l:"ด่าน 3: คำสงวน",q:"ข้อใดเป็น keyword ของ Python?",o:["classroom","class","student","school"],a:1,e:"class เป็น keyword สำหรับสร้างคลาส"}
 ];
 
-let idx=0,score=0,locked=false;
+let idx=0,score=0,locked=false,lastFinger=0,stable=0,lastAnswer=0;
 const $=id=>document.getElementById(id);
+
 function render(){
  const x=questions[idx];
  $("level").textContent=x.l;$("qnum").textContent=idx+1;$("score").textContent=score;
@@ -113,93 +100,92 @@ function render(){
  $("options").innerHTML="";
  x.o.forEach((t,i)=>{
   const b=document.createElement("button");b.className="option";
-  b.innerHTML='<span class="num">'+(i+1)+'</span>'+t;
-  b.onclick=()=>answer(i);$("options").appendChild(b);
+  b.innerHTML='<span class="num">'+(i+1)+'</span>'+t;b.onclick=()=>answer(i);
+  $("options").appendChild(b);
  });
  locked=false;
 }
 function answer(choice){
  if(locked)return;locked=true;
- const x=questions[idx], bs=[...$("options").children];
+ const x=questions[idx],bs=[...$("options").children];
  bs[x.a].classList.add("correct");
  if(choice===x.a){score+=10;$("score").textContent=score;$("feedback").innerHTML="<b>ถูกต้อง! +10 คะแนน</b><br>"+x.e}
  else{bs[choice].classList.add("wrong");$("feedback").innerHTML="<b>ยังไม่ถูก</b><br>"+x.e}
- setTimeout(()=>{idx++;idx<questions.length?render():finish()},1100);
+ setTimeout(()=>{idx++;idx<questions.length?render():finish()},1000);
 }
 function finish(){
  $("game").classList.add("hidden");$("result").classList.remove("hidden");
- $("finalScore").textContent=score;$("summary").textContent="ได้ "+score/10+" จาก 15 ข้อ";
+ $("finalScore").textContent=score;$("summary").textContent="ได้ "+(score/10)+" จาก 15 ข้อ";
 }
 $("restart").onclick=()=>{idx=0;score=0;$("result").classList.add("hidden");$("game").classList.remove("hidden");render()};
 render();
 
-/* Camera + Hand Tracking */
-let tracker=null,stream=null,running=false,lastCount=0,stable=0,lastTriggered=0,mpLoading=false;
-
 function countFingers(lm){
  if(!lm)return 0;
  let c=0;
- // Four non-thumb fingers: index, middle, ring, pinky.
+ // ไม่ใช้หัวแม่มือ: นิ้วชี้ กลาง นาง ก้อย = 1–4
  [[8,6],[12,10],[16,14],[20,18]].forEach(([tip,pip])=>{
-   if(lm[tip].y < lm[pip].y) c++;
+   if(lm[tip].y < lm[pip].y)c++;
  });
  return c;
 }
-function processFrame(){
- if(!running||!tracker||$("webcam").readyState<2){if(running)requestAnimationFrame(processFrame);return}
- try{
-  const res=tracker.detectForVideo($("webcam"),performance.now());
-  const c=res.landmarks&&res.landmarks.length?countFingers(res.landmarks[0]):0;
-  if(c===lastCount && c>0) stable++; else {lastCount=c;stable=0}
-  const now=Date.now();
-  if(stable>=6&&c>=1&&c<=4&&!locked&&now-lastTriggered>1400){
-   lastTriggered=now;stable=0;answer(c-1);
-  }
- }catch(e){console.warn(e)}
- requestAnimationFrame(processFrame);
+
+function onResults(results){
+ const hands=results.multiHandLandmarks||[];
+ let c=hands.length?countFingers(hands[0]):0;
+ if(c===lastFinger&&c>0)stable++;else{lastFinger=c;stable=0}
+ const now=Date.now();
+ if(stable>=5&&c>=1&&c<=4&&!locked&&now-lastAnswer>1400){
+  lastAnswer=now;stable=0;answer(c-1);
+ }
 }
 
-async function loadMediaPipe(){
- if(mpLoading)return;
- mpLoading=true;
+let camera=null,handModel=null;
+
+async function startTracking(){
+ $("cameraBtn").disabled=true;
  $("status").textContent="กำลังโหลด Hand Tracking...";
  try{
-  const mod=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm");
-  const Vision=await mod.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm");
-  const opts={runningMode:"VIDEO",numHands:1};
-  const model="https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
-  try{
-   tracker=await mod.HandLandmarker.createFromOptions(Vision,{baseOptions:{modelAssetPath:model,delegate:"GPU"},...opts});
-  }catch(e){
-   tracker=await mod.HandLandmarker.createFromOptions(Vision,{baseOptions:{modelAssetPath:model,delegate:"CPU"},...opts});
+  if(typeof Hands==="undefined"){
+   throw new Error("MediaPipe Hands โหลดไม่สำเร็จ");
   }
-  $("status").textContent="โหลด Hand Tracking สำเร็จ กำลังเปิดกล้อง...";
-  await openCamera();
- }catch(e){
-  console.error(e);
-  $("status").textContent="โหลด Hand Tracking ไม่สำเร็จ — ใช้เมาส์ตอบได้";
-  $("cameraBtn").textContent="ลองโหลดอีกครั้ง";
-  mpLoading=false;
- }
-}
-async function openCamera(){
- try{
-  if(!navigator.mediaDevices?.getUserMedia)throw new Error("Camera API unavailable");
-  stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:"user"},audio:false});
+  handModel=new Hands({locateFile:(file)=>{
+   return "https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/"+file;
+  }});
+  handModel.setOptions({
+   maxNumHands:1,
+   modelComplexity:0,
+   minDetectionConfidence:0.55,
+   minTrackingConfidence:0.55
+  });
+  handModel.onResults(onResults);
+
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+   throw new Error("เบราว์เซอร์ไม่รองรับกล้อง");
+  }
+  const stream=await navigator.mediaDevices.getUserMedia({
+   video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false
+  });
   $("webcam").srcObject=stream;
   await $("webcam").play();
-  running=true;$("status").textContent="กล้องพร้อม — ชู 1–4 นิ้ว";
-  $("cameraBtn").textContent="กล้องพร้อม";
-  $("cameraBtn").disabled=true;
-  requestAnimationFrame(processFrame);
+
+  camera=new Camera($("webcam"),{
+   onFrame:async()=>{
+    if(handModel)await handModel.send({image:$("webcam")});
+   },
+   width:640,height:480
+  });
+  camera.start();
+  $("status").textContent="กล้องพร้อม — ชู 1–4 นิ้ว";
+  $("cameraBtn").textContent="Hand Tracking พร้อม";
  }catch(e){
   console.error(e);
-  $("status").textContent="เปิดกล้องไม่ได้ — ใช้เมาส์ตอบได้";
-  $("cameraBtn").textContent="เปิดกล้องอีกครั้ง";
-  mpLoading=false;
+  $("status").textContent="เปิด Hand Tracking ไม่ได้ — ใช้เมาส์ตอบได้";
+  $("cameraBtn").disabled=false;
+  $("cameraBtn").textContent="ลองใหม่";
  }
 }
-$("cameraBtn").onclick=loadMediaPipe;
+$("cameraBtn").onclick=startTracking;
 </script>
 </body>
 </html>
